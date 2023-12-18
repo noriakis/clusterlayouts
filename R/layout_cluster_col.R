@@ -12,10 +12,10 @@ layout_cluster_col <- function(g, cluster, ncol=2, per_col=NULL,
 
     cluster_col <- g |> activate(nodes) |> pull(.data[[cluster]])
     ncl <- length(unique(cluster_col))
-    uniqcol <- unique(cluster_col)
+    uniqcol <- levels(cluster_col)
 
     if (!is.null(per_col)) {
-        cat("Overriding nrow option\n")
+        cat("Overriding ncol option\n")
         if (sum(per_col)!=ncl) {stop("Cluster number mismatch")}
     } else {
         if (ncl %% 2) {

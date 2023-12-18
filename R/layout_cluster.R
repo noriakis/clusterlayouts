@@ -13,7 +13,7 @@ layout_cluster <- function(g, cluster, nrow=2, per_row=NULL,
     }
     cluster_col <- g |> activate(nodes) |> pull(.data[[cluster]])
     ncl <- length(unique(cluster_col))
-    uniqcol <- unique(cluster_col)
+    uniqcol <- levels(cluster_col)
 
     if (!is.null(per_row)) {
         cat("Overriding nrow option\n")
