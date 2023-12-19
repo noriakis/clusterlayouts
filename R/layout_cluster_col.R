@@ -55,12 +55,18 @@ layout_cluster_col <- function(g, cluster, ncol=2, per_col=NULL,
 
         ## Not to call layout directory, or use igraph layout function
         lyt <- ggraph(tmp_g, layout=per_layout)$data[,c("x","y")]
-        graph_list[[tmp_cl]][["layout"]] <- lyt * widths[longest_col]
+
+        graph_list[[tmp_cl]][["layout"]] <- lyt #* widths[longest_col]
         graph_list[[tmp_cl]][["tmp_g"]] <- tmp_g
     }
     for (gn in seq_along(names(graph_list))) {
     	
         if (is.null(graph_list[[names(graph_list)[gn+1]]]$layout$y)) {
+            cur_y <- graph_list[[names(graph_list)[gn]]]$layout$y
+            if (max(cur_y) > 0) {
+                cur_y <- cur_y - abs(max(cur_y))
+                graph_list[[names(graph_list)[gn]]]$layout$y <- cur_y
+            }
             next
         }
 
@@ -68,7 +74,6 @@ layout_cluster_col <- function(g, cluster, ncol=2, per_col=NULL,
         if (max(cur_y) > 0) {
             cur_y <- cur_y - abs(max(cur_y))
         }
-
         cur_max_y <- max(cur_y)
         cur_min_y <- min(cur_y)
 
@@ -79,7 +84,7 @@ layout_cluster_col <- function(g, cluster, ncol=2, per_col=NULL,
         if (gn!=1) {
             graph_list[[names(graph_list)[gn+1]]]$layout$y <- nex_y + cur_min_y - y_space        
         } else {
-            graph_list[[names(graph_list)[gn+1]]]$layout$y <- nex_y + (1*widths[longest_col]) + cur_min_y - y_space
+            graph_list[[names(graph_list)[gn+1]]]$layout$y <- nex_y + 1 + cur_min_y - y_space
         }
     }
 
@@ -87,9 +92,13 @@ layout_cluster_col <- function(g, cluster, ncol=2, per_col=NULL,
     longest_col_max <- max(graph_list[[1]]$layout$y)
 
     longest_mat <- do.call(rbind, lapply(graph_list, function(x) {
-        cbind(x$layout[,c("x","y")],
+        tmp <- cbind(x$layout[,c("x","y")],
             x$tmp_g |> activate(nodes) |> pull(.data[["tmp_g_ind"]])) |> data.frame() |>
             `colnames<-`(c("x","y","ind"))
+        tmp$x <- tmp$x * widths[longest_col]
+        tmp$y <- tmp$y * widths[longest_col]
+        return(tmp)
+
     }))
 
     ## Other shorter cols
@@ -109,53 +118,89 @@ layout_cluster_col <- function(g, cluster, ncol=2, per_col=NULL,
 
             ## Not to call layout directory, or use igraph layout function
             lyt <- ggraph(tmp_g, layout=per_layout)$data[,c("x","y")]
-            tmp_graph_list[[tmp_cl]][["layout"]] <- lyt * widths[i]
+            tmp_graph_list[[tmp_cl]][["layout"]] <- lyt #* widths[i]
             tmp_graph_list[[tmp_cl]][["tmp_g"]] <- tmp_g
         }
         for (gn in seq_along(names(tmp_graph_list))) {
 	        if (is.null(tmp_graph_list[[names(tmp_graph_list)[gn+1]]]$layout$y)) {
+                cur_y <- graph_list[[names(graph_list)[gn]]]$layout$y
+                if (max(cur_y) > 0) {
+                    cur_y <- cur_y - abs(max(cur_y))
+                    graph_list[[names(graph_list)[gn]]]$layout$y <- cur_y
+                }
 	            next
 	        }
 
 	        cur_y <- tmp_graph_list[[names(tmp_graph_list)[gn]]]$layout$y
-	        if (max(cur_y) > 0) {
-	            cur_y <- cur_y - abs(max(cur_y))
-	        }
-
+            if (max(cur_y) > 0) {
+                cur_y <- cur_y - abs(max(cur_y))
+            }
 	        cur_max_y <- max(cur_y)
 	        cur_min_y <- min(cur_y)
 
 	        nex_y <- tmp_graph_list[[names(tmp_graph_list)[gn+1]]]$layout$y
-	        if (max(nex_y) > 0) {
-	            nex_y <- nex_y - abs(max(nex_y))
-	        }
+            if (max(nex_y) > 0) {
+                nex_y <- nex_y - abs(max(nex_y))
+            }
 	        if (gn!=1) {
 	            tmp_graph_list[[names(tmp_graph_list)[gn+1]]]$layout$y <- nex_y + cur_min_y - y_space        
 	        } else {
-	            tmp_graph_list[[names(tmp_graph_list)[gn+1]]]$layout$y <- nex_y + (1*widths[i]) + cur_min_y - y_space
+	            tmp_graph_list[[names(tmp_graph_list)[gn+1]]]$layout$y <- nex_y + 1 + cur_min_y - y_space
 	        }
         }
 
         ## Centralize
-        max_in_col <- max(tmp_graph_list[[length(tmp_graph_list)]]$layout[,"y"])
-        min_in_col <- min(tmp_graph_list[[length(tmp_graph_list)]]$layout[,"y"])
+        if (sum(widths==1)==length(per_col)) {
+            max_in_col <- max(tmp_graph_list[[length(tmp_graph_list)]]$layout[,"y"])
+            min_in_col <- min(tmp_graph_list[[length(tmp_graph_list)]]$layout[,"y"])
 
-        for (gn in seq_along(names(tmp_graph_list))) {
-            cent_y <- tmp_graph_list[[names(tmp_graph_list)[gn]]]$layout[,"y"]
-            jitter <- (longest_col_min - min_in_col) / 2
-            tmp_graph_list[[names(tmp_graph_list)[gn]]]$layout[,"y"] <- cent_y + jitter
+            for (gn in seq_along(names(tmp_graph_list))) {
+                cent_y <- tmp_graph_list[[names(tmp_graph_list)[gn]]]$layout[,"y"]
+                jitter <- (longest_col_min - min_in_col) / 2
+                tmp_graph_list[[names(tmp_graph_list)[gn]]]$layout[,"y"] <- cent_y + jitter
+            }
         }
 
         do.call(rbind, lapply(tmp_graph_list, function(x) {
-            cbind(x$layout[,c("x","y")],
+            tmp <- cbind(x$layout[,c("x","y")],
                 x$tmp_g |> activate(nodes) |> pull(.data[["tmp_g_ind"]])) |> data.frame() |>
                 `colnames<-`(c("x","y","ind"))
+            tmp$x <- tmp$x * widths[i]
+            tmp$y <- tmp$y * widths[i]
+            return(tmp)
         }))
     })
     
     names(other_cols_res) <- as.character(other_cols)
     other_cols_res[[as.character(longest_col)]] <- longest_mat
-    
+
+
+
+    if (sum(widths==1)!=length(per_col)) {
+        tmpn <- names(other_cols_res)
+        other_cols_res <- lapply(other_cols_res, function(tmp) {
+            if (max(tmp$y)>0) {
+                tmp$y <- tmp$y - max(tmp$y)
+            } else {
+                tmp$y <- tmp$y + abs(max(tmp$y))
+            }
+            tmp
+        })
+        names(other_cols_res) <- tmpn
+        cur_min <- 0
+        for (i in names(other_cols_res)) {
+            if (min(other_cols_res[[i]]$y)<cur_min) {
+                cur_min <- i
+            }
+        }
+        longest_col_min <- other_cols_res[[as.character(cur_min)]]$y |> min()
+        for (i in names(other_cols_res)) {
+            min_in_col <- min(other_cols_res[[as.character(i)]]$y)
+            jitter <- (longest_col_min - (min_in_col)) / 2
+            other_cols_res[[as.character(i)]]$y <- other_cols_res[[as.character(i)]]$y + jitter
+        }
+    }
+
     ## Reposition X
     for (i in seq_len(length(per_col))) {
         if (is.null(other_cols_res[[as.character(i+1)]])) {

@@ -59,3 +59,21 @@ ggraph(test, layout="manual", x=lyt$x, y=lyt$y)+
 ```
 
 <img src="man/figures/README-unnamed-chunk-3-1.png" width="3600" style="display: block; margin: auto;" />
+
+``` r
+## Can change widths per column
+test <- igraph::random.graph.game(n=1000, p=0.01)
+panel <- c(2,4,3,1,5,3,6,7,2,4)
+widths <- c(1,2,3,4,5,12,3,2,1,2)
+V(test)$category <- as.factor(sample(1:sum(panel), 1000, replace=TRUE))
+lyt <- layout_cluster_col(test, "category", 
+                          per_col=panel, widths=widths)
+#> Overriding ncol option
+ggraph(test, layout="manual", x=lyt$x, y=lyt$y)+
+    geom_edge_link0(color="grey80")+
+    geom_node_point(aes(color=category))+
+    scico::scale_color_scico_d()+
+    theme_graph()
+```
+
+<img src="man/figures/README-unnamed-chunk-4-1.png" width="3600" style="display: block; margin: auto;" />
