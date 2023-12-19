@@ -5,7 +5,7 @@
 #' @export
 #' @return matrix of layout
 layout_cluster_col <- function(g, cluster, ncol=2, per_col=NULL,
-    per_layout="circle", x_space=1, y_space=1) {
+    per_layout="circle", x_space=1, y_space=1, widths=NULL) {
     if (!("tbl_graph" %in% class(g))) {
         g <- as_tbl_graph(g)
     }
@@ -22,6 +22,14 @@ layout_cluster_col <- function(g, cluster, ncol=2, per_col=NULL,
             per_col <- c(rep(as.integer(ncl / ncol), ncol), ncl %% ncol)
         } else {
             per_col <- rep(ncl / ncol, ncol)
+        }
+    }
+
+    if (is.null(widths)) {
+        widths <- rep(1, length(per_col))
+    } else {
+        if (length(widths)!=length(per_col)) {
+            stop("widths number should be equal to per_col")
         }
     }
 
@@ -47,7 +55,7 @@ layout_cluster_col <- function(g, cluster, ncol=2, per_col=NULL,
 
         ## Not to call layout directory, or use igraph layout function
         lyt <- ggraph(tmp_g, layout=per_layout)$data[,c("x","y")]
-        graph_list[[tmp_cl]][["layout"]] <- lyt
+        graph_list[[tmp_cl]][["layout"]] <- lyt * widths[longest_col]
         graph_list[[tmp_cl]][["tmp_g"]] <- tmp_g
     }
     for (gn in seq_along(names(graph_list))) {
@@ -71,7 +79,7 @@ layout_cluster_col <- function(g, cluster, ncol=2, per_col=NULL,
         if (gn!=1) {
             graph_list[[names(graph_list)[gn+1]]]$layout$y <- nex_y + cur_min_y - y_space        
         } else {
-            graph_list[[names(graph_list)[gn+1]]]$layout$y <- nex_y + 1 + cur_min_y - y_space
+            graph_list[[names(graph_list)[gn+1]]]$layout$y <- nex_y + (1*widths[longest_col]) + cur_min_y - y_space
         }
     }
 
@@ -101,7 +109,7 @@ layout_cluster_col <- function(g, cluster, ncol=2, per_col=NULL,
 
             ## Not to call layout directory, or use igraph layout function
             lyt <- ggraph(tmp_g, layout=per_layout)$data[,c("x","y")]
-            tmp_graph_list[[tmp_cl]][["layout"]] <- lyt
+            tmp_graph_list[[tmp_cl]][["layout"]] <- lyt * widths[i]
             tmp_graph_list[[tmp_cl]][["tmp_g"]] <- tmp_g
         }
         for (gn in seq_along(names(tmp_graph_list))) {
@@ -124,7 +132,7 @@ layout_cluster_col <- function(g, cluster, ncol=2, per_col=NULL,
 	        if (gn!=1) {
 	            tmp_graph_list[[names(tmp_graph_list)[gn+1]]]$layout$y <- nex_y + cur_min_y - y_space        
 	        } else {
-	            tmp_graph_list[[names(tmp_graph_list)[gn+1]]]$layout$y <- nex_y + 1 + cur_min_y - y_space
+	            tmp_graph_list[[names(tmp_graph_list)[gn+1]]]$layout$y <- nex_y + (1*widths[i]) + cur_min_y - y_space
 	        }
         }
 

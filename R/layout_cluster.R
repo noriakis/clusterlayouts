@@ -5,9 +5,10 @@
 #' @export
 #' @return matrix of layout
 layout_cluster <- function(g, cluster, nrow=2, per_row=NULL,
-    per_layout="circle", x_space=1, y_space=1) {
+    per_layout="circle", x_space=1, y_space=1, heights=NULL) {
     # if ((is.null(nrow)&(is.null(ncol)))) {stop("Please specify either of nrow or ncol")}
     # if ((!is.null(nrow)&(!is.null(ncol)))) {stop("Please specify either of nrow or ncol")}    
+
     if (!("tbl_graph" %in% class(g))) {
         g <- as_tbl_graph(g)
     }
@@ -23,6 +24,14 @@ layout_cluster <- function(g, cluster, nrow=2, per_row=NULL,
             per_row <- c(rep(as.integer(ncl / nrow), nrow), ncl %% nrow)
         } else {
             per_row <- rep(ncl / nrow, nrow)
+        }
+    }
+
+    if (is.null(heights)) {
+        heights <- rep(1, length(per_row))
+    } else {
+        if (length(heights)!=length(per_row)) {
+            stop("heights number should be equal to per_row")
         }
     }
 
@@ -48,7 +57,7 @@ layout_cluster <- function(g, cluster, nrow=2, per_row=NULL,
 
         ## Not to call layout directory, or use igraph layout function
         lyt <- ggraph(tmp_g, layout=per_layout)$data[,c("x","y")]
-        graph_list[[tmp_cl]][["layout"]] <- lyt
+        graph_list[[tmp_cl]][["layout"]] <- lyt * heights[longest_row]
         graph_list[[tmp_cl]][["tmp_g"]] <- tmp_g
     }
     for (gn in seq_along(names(graph_list))) {
@@ -99,7 +108,7 @@ layout_cluster <- function(g, cluster, nrow=2, per_row=NULL,
 
             ## Not to call layout directory, or use igraph layout function
             lyt <- ggraph(tmp_g, layout=per_layout)$data[,c("x","y")]
-            tmp_graph_list[[tmp_cl]][["layout"]] <- lyt
+            tmp_graph_list[[tmp_cl]][["layout"]] <- lyt * heights[i]
             tmp_graph_list[[tmp_cl]][["tmp_g"]] <- tmp_g
         }
         for (gn in seq_along(names(tmp_graph_list))) {
