@@ -1,10 +1,10 @@
-#' layout_cluster_col
+#' layout_cluster_panel_col
 #' 
 #' @param g tbl_graph object
 #' @param cluster cluster column in node table
 #' @export
 #' @return matrix of layout
-layout_cluster_col <- function(g, cluster, ncol=2, per_col=NULL,
+layout_cluster_panel_col <- function(g, cluster, ncol=2, per_col=NULL,
     per_layout="circle", x_space=1, y_space=1, widths=NULL) {
     if (!("tbl_graph" %in% class(g))) {
         g <- as_tbl_graph(g)

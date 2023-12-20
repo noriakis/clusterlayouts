@@ -1,10 +1,10 @@
-#' layout_cluster
+#' layout_cluster_panel
 #' 
 #' @param g tbl_graph object
 #' @param cluster cluster column in node table
 #' @export
 #' @return matrix of layout
-layout_cluster <- function(g, cluster, nrow=2, per_row=NULL,
+layout_cluster_panel <- function(g, cluster, nrow=2, per_row=NULL,
     per_layout="circle", x_space=1, y_space=1, heights=NULL) {
     # if ((is.null(nrow)&(is.null(ncol)))) {stop("Please specify either of nrow or ncol")}
     # if ((!is.null(nrow)&(!is.null(ncol)))) {stop("Please specify either of nrow or ncol")}    
