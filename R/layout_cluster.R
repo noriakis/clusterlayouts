@@ -12,7 +12,7 @@ layout_cluster_panel <- function(g, cluster, nrow=2, per_row=NULL,
     if (!("tbl_graph" %in% class(g))) {
         g <- as_tbl_graph(g)
     }
-    cluster_col <- g |> activate(nodes) |> pull(.data[[cluster]])
+    cluster_col <- vertex_attr(g, cluster)
     ncl <- length(unique(cluster_col))
     uniqcol <- levels(cluster_col)
 
@@ -51,9 +51,9 @@ layout_cluster_panel <- function(g, cluster, nrow=2, per_row=NULL,
 
     graph_list <- list()
     for (tmp_cl in longest_list) {
-        tmp_g <- g |> activate(nodes) |> filter(.data[[cluster]]==tmp_cl)
+        tmp_g <- induced.subgraph(g, which(cluster_col==tmp_cl))
         tmp_g_ind <- which(cluster_col==tmp_cl)
-        tmp_g <- tmp_g |> mutate(tmp_g_ind=tmp_g_ind)
+        V(tmp_g)$ind <- tmp_g_ind
 
         ## Not to call layout directory, or use igraph layout function
         lyt <- ggraph(tmp_g, layout=per_layout)$data[,c("x","y")]
@@ -83,7 +83,7 @@ layout_cluster_panel <- function(g, cluster, nrow=2, per_row=NULL,
 
     longest_mat <- do.call(rbind, lapply(graph_list, function(x) {
         cbind(x$layout[,c("x","y")],
-            x$tmp_g |> activate(nodes) |> pull(.data[["tmp_g_ind"]])) |> data.frame() |>
+            V(x$tmp_g)$ind) |> data.frame() |>
             `colnames<-`(c("x","y","ind"))
     }))
 
@@ -98,9 +98,9 @@ layout_cluster_panel <- function(g, cluster, nrow=2, per_row=NULL,
         }
         tmp_graph_list <- list()
         for (tmp_cl in cl_list) {
-            tmp_g <- g |> activate(nodes) |> filter(.data[[cluster]]==tmp_cl)
+            tmp_g <- induced.subgraph(g, which(cluster_col==tmp_cl))
             tmp_g_ind <- which(cluster_col==tmp_cl)
-            tmp_g <- tmp_g |> mutate(tmp_g_ind=tmp_g_ind)
+            V(tmp_g)$ind <- tmp_g_ind
 
             ## Not to call layout directory, or use igraph layout function
             lyt <- ggraph(tmp_g, layout=per_layout)$data[,c("x","y")]
@@ -137,7 +137,7 @@ layout_cluster_panel <- function(g, cluster, nrow=2, per_row=NULL,
 
         do.call(rbind, lapply(tmp_graph_list, function(x) {
             cbind(x$layout[,c("x","y")],
-                x$tmp_g |> activate(nodes) |> pull(.data[["tmp_g_ind"]])) |> data.frame() |>
+                V(x$tmp_g)$ind) |> data.frame() |>
                 `colnames<-`(c("x","y","ind"))
         }))
     })
