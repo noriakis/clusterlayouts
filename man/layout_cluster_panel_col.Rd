@@ -9,7 +9,7 @@ layout_cluster_panel_col(
   cluster,
   ncol = 2,
   per_col = NULL,
-  per_layout = "circle",
+  per_layout = in_circle(),
   x_space = 1,
   y_space = 1,
   widths = NULL

@@ -5,13 +5,13 @@
 #' @export
 #' @return matrix of layout
 layout_cluster_panel <- function(g, cluster, nrow=2, per_row=NULL,
-    per_layout="circle", x_space=1, y_space=1, heights=NULL) {
+    per_layout=in_circle(), x_space=1, y_space=1, heights=NULL) {
     # if ((is.null(nrow)&(is.null(ncol)))) {stop("Please specify either of nrow or ncol")}
     # if ((!is.null(nrow)&(!is.null(ncol)))) {stop("Please specify either of nrow or ncol")}    
 
-    if (!("tbl_graph" %in% class(g))) {
-        g <- as_tbl_graph(g)
-    }
+    # if (!("tbl_graph" %in% class(g))) {
+    #     g <- as_tbl_graph(g)
+    # }
     cluster_col <- vertex_attr(g, cluster)
     ncl <- length(unique(cluster_col))
     uniqcol <- levels(cluster_col)
@@ -56,7 +56,10 @@ layout_cluster_panel <- function(g, cluster, nrow=2, per_row=NULL,
         V(tmp_g)$ind <- tmp_g_ind
 
         ## Not to call layout directory, or use igraph layout function
-        lyt <- ggraph(tmp_g, layout=per_layout)$data[,c("x","y")]
+        # lyt <- ggraph(tmp_g, layout=per_layout)$data[,c("x","y")]
+        lyt <- layout_(tmp_g, per_layout)[,c(1:2)] |>
+            data.frame() |>
+            `colnames<-`(c("x","y"))
         if (min(lyt$x) < 0) {
             lyt$x <- lyt$x + abs(min(lyt$x))
         }
@@ -103,7 +106,11 @@ layout_cluster_panel <- function(g, cluster, nrow=2, per_row=NULL,
             V(tmp_g)$ind <- tmp_g_ind
 
             ## Not to call layout directory, or use igraph layout function
-            lyt <- ggraph(tmp_g, layout=per_layout)$data[,c("x","y")]
+            # lyt <- ggraph(tmp_g, layout=per_layout)$data[,c("x","y")]
+	        lyt <- layout_(tmp_g, per_layout)[,c(1:2)] |>
+    	        data.frame() |>
+        	    `colnames<-`(c("x","y"))
+
             if (min(lyt$x) < 0) {
                 lyt$x <- lyt$x + abs(min(lyt$x))
             }
@@ -184,7 +191,8 @@ layout_cluster_panel <- function(g, cluster, nrow=2, per_row=NULL,
     }
 
     ## Finalize
-    res <- do.call(rbind, other_rows_res) |> data.frame() |> dplyr::arrange(ind)
+    res <- do.call(rbind, other_rows_res) |> data.frame()
+    res <- res[order(res$ind),]
     row.names(res) <- res$ind
     res
 }

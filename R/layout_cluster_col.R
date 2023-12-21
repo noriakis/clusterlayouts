@@ -5,12 +5,9 @@
 #' @export
 #' @return matrix of layout
 layout_cluster_panel_col <- function(g, cluster, ncol=2, per_col=NULL,
-    per_layout="circle", x_space=1, y_space=1, widths=NULL) {
-    if (!("tbl_graph" %in% class(g))) {
-        g <- as_tbl_graph(g)
-    }
+    per_layout=in_circle(), x_space=1, y_space=1, widths=NULL) {
 
-    cluster_col <- g |> activate(nodes) |> pull(.data[[cluster]])
+    cluster_col <- vertex_attr(g, cluster)
     ncl <- length(unique(cluster_col))
     uniqcol <- levels(cluster_col)
 
@@ -49,12 +46,13 @@ layout_cluster_panel_col <- function(g, cluster, ncol=2, per_col=NULL,
 
     graph_list <- list()
     for (tmp_cl in longest_list) {
-        tmp_g <- g |> activate(nodes) |> filter(.data[[cluster]]==tmp_cl)
+        tmp_g <- induced.subgraph(g, which(cluster_col==tmp_cl))
         tmp_g_ind <- which(cluster_col==tmp_cl)
-        tmp_g <- tmp_g |> mutate(tmp_g_ind=tmp_g_ind)
+        V(tmp_g)$ind <- tmp_g_ind
 
-        ## Not to call layout directory, or use igraph layout function
-        lyt <- ggraph(tmp_g, layout=per_layout)$data[,c("x","y")]
+        lyt <- layout_(tmp_g, per_layout)[,c(1:2)] |>
+            data.frame() |>
+            `colnames<-`(c("x","y"))
 
         graph_list[[tmp_cl]][["layout"]] <- lyt #* widths[longest_col]
         graph_list[[tmp_cl]][["tmp_g"]] <- tmp_g
@@ -91,15 +89,17 @@ layout_cluster_panel_col <- function(g, cluster, ncol=2, per_col=NULL,
     longest_col_min <- min(graph_list[[length(graph_list)]]$layout$y)
     longest_col_max <- max(graph_list[[1]]$layout$y)
 
+
     longest_mat <- do.call(rbind, lapply(graph_list, function(x) {
         tmp <- cbind(x$layout[,c("x","y")],
-            x$tmp_g |> activate(nodes) |> pull(.data[["tmp_g_ind"]])) |> data.frame() |>
+            V(x$tmp_g)$ind) |> data.frame() |>
             `colnames<-`(c("x","y","ind"))
         tmp$x <- tmp$x * widths[longest_col]
         tmp$y <- tmp$y * widths[longest_col]
         return(tmp)
 
     }))
+
 
     ## Other shorter cols
     other_cols_res <- lapply(other_cols, function(i) {
@@ -112,12 +112,14 @@ layout_cluster_panel_col <- function(g, cluster, ncol=2, per_col=NULL,
         }
         tmp_graph_list <- list()
         for (tmp_cl in cl_list) {
-            tmp_g <- g |> activate(nodes) |> filter(.data[[cluster]]==tmp_cl)
-            tmp_g_ind <- which(cluster_col==tmp_cl)
-            tmp_g <- tmp_g |> mutate(tmp_g_ind=tmp_g_ind)
+	        tmp_g <- induced.subgraph(g, which(cluster_col==tmp_cl))
+	        tmp_g_ind <- which(cluster_col==tmp_cl)
+	        V(tmp_g)$ind <- tmp_g_ind
 
-            ## Not to call layout directory, or use igraph layout function
-            lyt <- ggraph(tmp_g, layout=per_layout)$data[,c("x","y")]
+	        lyt <- layout_(tmp_g, per_layout)[,c(1:2)] |>
+    	        data.frame() |>
+        	    `colnames<-`(c("x","y"))
+            
             tmp_graph_list[[tmp_cl]][["layout"]] <- lyt #* widths[i]
             tmp_graph_list[[tmp_cl]][["tmp_g"]] <- tmp_g
         }
@@ -160,15 +162,15 @@ layout_cluster_panel_col <- function(g, cluster, ncol=2, per_col=NULL,
                 tmp_graph_list[[names(tmp_graph_list)[gn]]]$layout[,"y"] <- cent_y + jitter
             }
         }
-
         do.call(rbind, lapply(tmp_graph_list, function(x) {
             tmp <- cbind(x$layout[,c("x","y")],
-                x$tmp_g |> activate(nodes) |> pull(.data[["tmp_g_ind"]])) |> data.frame() |>
+                V(x$tmp_g)$ind) |> data.frame() |>
                 `colnames<-`(c("x","y","ind"))
             tmp$x <- tmp$x * widths[i]
             tmp$y <- tmp$y * widths[i]
             return(tmp)
         }))
+
     })
     
     names(other_cols_res) <- as.character(other_cols)
@@ -225,7 +227,8 @@ layout_cluster_panel_col <- function(g, cluster, ncol=2, per_col=NULL,
     }
 
     ## Finalize
-    res <- do.call(rbind, other_cols_res) |> data.frame() |> dplyr::arrange(ind)
+    res <- do.call(rbind, other_cols_res) |> data.frame()
+    res <- res[order(res$ind),]
     row.names(res) <- res$ind
     res
 }
