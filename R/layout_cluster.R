@@ -17,7 +17,7 @@ layout_cluster_panel <- function(g, cluster, nrow=2, per_row=NULL,
     uniqcol <- levels(cluster_col)
 
     if (!is.null(per_row)) {
-        cat("Overriding nrow option\n")
+        # cat("Overriding nrow option\n")
         if (sum(per_row)!=ncl) {stop("Cluster number mismatch")}
     } else {
         if (ncl %% 2) {

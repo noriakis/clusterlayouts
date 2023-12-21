@@ -12,7 +12,7 @@ layout_cluster_panel_col <- function(g, cluster, ncol=2, per_col=NULL,
     uniqcol <- levels(cluster_col)
 
     if (!is.null(per_col)) {
-        cat("Overriding ncol option\n")
+        # cat("Overriding ncol option\n")
         if (sum(per_col)!=ncl) {stop("Cluster number mismatch")}
     } else {
         if (ncl %% 2) {
