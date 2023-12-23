@@ -2,3 +2,5 @@
 
 export(layout_cluster_panel)
 export(layout_cluster_panel_col)
+export(layout_cluster_wise)
+export(layout_with_explicit_edge_weight)
