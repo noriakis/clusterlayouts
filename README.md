@@ -5,10 +5,13 @@
 
 Graph layouts using cluster information. The function calculates a
 grouped layout based on the node attribute in `igraph` or `tbl_graph`
-object, while respecting the original edge attributes.
-
-Reference to `component_wise`, `merge_coords`, and `layout_components`
-in `igraph`.
+object, while respecting the original edge attributes. If you performed
+community detection based on the network, these layouts should not be
+used as this layout just explicitly places nodes belonging to the same
+category together. The `layout_cluster_wise` uses `igraph::merge_coords`
+internally to place nodes using the dla algorithm. Reference to
+`Group Attributes Layout` in Cytoscape and `component_wise` and
+`layout_components` for the disconnected graphs in `igraph`.
 
 ``` r
 ## Make an example graph and assign a random category
